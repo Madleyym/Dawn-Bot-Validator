@@ -55,7 +55,7 @@ A specialized bot for validating and maintaining multiple Dawn extension account
 Run the bot with:
 
 ```bash
-python dawn_bot_alternating.py
+python risk-bot.py
 ```
 
 ### Configuration Options
