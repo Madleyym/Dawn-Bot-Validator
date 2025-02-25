@@ -55,7 +55,7 @@ A specialized bot for validating and maintaining multiple Dawn extension account
 Run the bot with:
 
 ```bash
-python risk-bot.py
+python risk-bot.py # or python3 risk-bot.py
 ```
 
 ### Configuration Options
