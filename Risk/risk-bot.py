@@ -5,7 +5,6 @@ from datetime import datetime
 from fake_useragent import FakeUserAgent
 import asyncio, json, os, pytz, uuid, random
 
-# Initialize colorama
 init(autoreset=True)
 
 wib = pytz.timezone("Asia/Jakarta")
@@ -27,11 +26,11 @@ class Dawn:
         self.extension_id = "fpdkjdnhkakefebpekbdhillbhonfjjp"
         self.proxies = []
         self.proxy_index = 0
-        self.used_proxies = {}  # Track used proxies per account
-        self.proxy_display_mapping = {}  # Map actual proxy to display name
-        self.proxy_count = 0  # Counter for proxy display names
-        self.max_accounts = 2  # Default to process only 2 accounts
-        self.runs_per_proxy = 1  # How many times to run each account with each proxy
+        self.used_proxies = {}
+        self.proxy_display_mapping = {}
+        self.proxy_count = 0
+        self.max_accounts = 2
+        self.runs_per_proxy = 1
 
     def clear_terminal(self):
         os.system("cls" if os.name == "nt" else "clear")
@@ -56,7 +55,6 @@ class Dawn:
         return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
     def get_proxy_display_name(self, proxy):
-        """Convert actual proxy URL to a display name like 'Proxy - 1'"""
         if proxy not in self.proxy_display_mapping:
             self.proxy_count += 1
             self.proxy_display_mapping[proxy] = f"Proxy - {self.proxy_count}"
@@ -81,11 +79,9 @@ class Dawn:
                         )
                         return
 
-                    # Reset proxy mappings when loading new proxies
                     self.proxy_display_mapping = {}
                     self.proxy_count = 0
 
-                    # Shuffle the proxies for better distribution
                     random.shuffle(self.proxies)
                     self.log(
                         f"{Fore.GREEN + Style.BRIGHT}Proxies successfully downloaded.{Style.RESET_ALL}"
@@ -114,11 +110,9 @@ class Dawn:
 
             self.proxies = proxies
 
-            # Reset proxy mappings when loading new proxies
             self.proxy_display_mapping = {}
             self.proxy_count = 0
 
-            # Shuffle the proxies for better distribution
             random.shuffle(self.proxies)
             self.log(
                 f"{Fore.YELLOW + Style.BRIGHT}Loaded {len(self.proxies)} proxies.{Style.RESET_ALL}"
@@ -132,22 +126,18 @@ class Dawn:
             self.proxies = []
 
     def get_next_proxy(self, email=None):
-        """Get next available proxy, avoiding ones already used for this account"""
         if not self.proxies:
             self.log(f"{Fore.RED + Style.BRIGHT}No proxies available!{Style.RESET_ALL}")
             return None
 
-        # Initialize used proxies for this account if not already done
         if email and email not in self.used_proxies:
             self.used_proxies[email] = set()
 
-        # Cycle through proxies until finding an unused one for this account
         attempts = 0
         while attempts < len(self.proxies):
             proxy = self.proxies[self.proxy_index]
             self.proxy_index = (self.proxy_index + 1) % len(self.proxies)
 
-            # If not tracking per account or proxy hasn't been used yet for this account
             if not email or proxy not in self.used_proxies[email]:
                 if email:
                     self.used_proxies[email].add(proxy)
@@ -155,12 +145,11 @@ class Dawn:
 
             attempts += 1
 
-        # If all proxies have been used for this account, reset and use them again
         if email:
             self.used_proxies[email] = set()
             return self.get_next_proxy(email)
         else:
-            return self.proxies[0]  # Return any proxy if all have been used
+            return self.proxies[0]
 
     def check_proxy_schemes(self, proxies):
         schemes = ["http://", "https://", "socks4://", "socks5://"]
@@ -180,9 +169,7 @@ class Dawn:
             with open("accounts.json", "r") as file:
                 data = json.load(file)
                 if isinstance(data, list):
-                    return data[
-                        : self.max_accounts
-                    ]  # Only return the max number of accounts
+                    return data[: self.max_accounts]
                 return []
         except json.JSONDecodeError:
             return []
@@ -294,7 +281,6 @@ class Dawn:
                         f"{Fore.GREEN + Style.BRIGHT}Run {proxy_type} Selected.{Style.RESET_ALL}"
                     )
 
-                    # Ask for number of accounts to process
                     try:
                         num_accounts = int(
                             input(
@@ -302,9 +288,7 @@ class Dawn:
                             ).strip()
                             or "2"
                         )
-                        self.max_accounts = max(
-                            1, min(num_accounts, 10)
-                        )  # Limit between 1-10 accounts
+                        self.max_accounts = max(1, min(num_accounts, 10))
                         print(
                             f"{Fore.GREEN + Style.BRIGHT}Will process {self.max_accounts} accounts.{Style.RESET_ALL}"
                         )
@@ -313,7 +297,6 @@ class Dawn:
                             f"{Fore.YELLOW + Style.BRIGHT}Invalid input, using default of 2 accounts.{Style.RESET_ALL}"
                         )
 
-                    # If using proxies, ask how many proxy cycles per account
                     if choose in [1, 2]:
                         try:
                             proxy_cycles = int(
@@ -322,7 +305,7 @@ class Dawn:
                                 ).strip()
                                 or "1"
                             )
-                            self.runs_per_proxy = max(1, proxy_cycles)  # At least 1
+                            self.runs_per_proxy = max(1, proxy_cycles)
                             print(
                                 f"{Fore.GREEN + Style.BRIGHT}Will run each account with {self.runs_per_proxy} unique proxies.{Style.RESET_ALL}"
                             )
@@ -531,9 +514,7 @@ class Dawn:
                     f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
                 )
 
-    # The rest of the code remains unchanged...
     async def main(self):
-        # This remains the same as your provided code...
         try:
             accounts = self.load_accounts()
             if not accounts:
@@ -551,7 +532,6 @@ class Dawn:
             self.clear_terminal()
             self.welcome()
 
-            # Limit accounts to the configured max
             accounts = accounts[: self.max_accounts]
 
             self.log(
@@ -586,13 +566,9 @@ class Dawn:
                         await self.load_auto_proxies()
                         last_proxy_update = datetime.now()
 
-                # Reset used proxies for fresh cycle
                 self.used_proxies = {}
 
-                # MODIFIED LOGIC: Cycle through proxy runs, alternating accounts
-                # Run each proxy cycle
                 for proxy_run in range(1, self.runs_per_proxy + 1):
-                    # Process each account once per cycle
                     for account in accounts:
                         token = account.get("Token")
                         email = account.get("Email", "Unknown Email")
@@ -608,12 +584,10 @@ class Dawn:
 
                         app_id = self.generate_app_id()
 
-                        # Process the current account with the current proxy run
                         await self.process_accounts(
                             app_id, token, email, use_proxy, proxy_run
                         )
 
-                        # Add delay between accounts in the same cycle
                         if accounts.index(account) < len(accounts) - 1:
                             delay = random.randint(3, 8)
                             self.log(
@@ -621,7 +595,6 @@ class Dawn:
                             )
                             await asyncio.sleep(delay)
 
-                    # Add separator between proxy cycles
                     if proxy_run < self.runs_per_proxy:
                         self.log(f"{Fore.CYAN + Style.BRIGHT}-{Style.RESET_ALL}" * 75)
                         delay = random.randint(5, 15)
@@ -635,7 +608,6 @@ class Dawn:
                             f"{Fore.GREEN + Style.BRIGHT}Completed all {self.runs_per_proxy} proxy cycles for all accounts.{Style.RESET_ALL}"
                         )
 
-                # Run timer after processing all accounts in all cycles
                 seconds = 120
                 while seconds > 0:
                     formatted_time = self.format_seconds(seconds)
