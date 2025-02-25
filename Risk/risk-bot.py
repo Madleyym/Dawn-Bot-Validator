@@ -1,9 +1,12 @@
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp_socks import ProxyConnector
-from colorama import *
+from colorama import Fore, Style, init
 from datetime import datetime
 from fake_useragent import FakeUserAgent
 import asyncio, json, os, pytz, uuid, random
+
+# Initialize colorama
+init(autoreset=True)
 
 wib = pytz.timezone("Asia/Jakarta")
 
@@ -25,6 +28,8 @@ class Dawn:
         self.proxies = []
         self.proxy_index = 0
         self.used_proxies = {}  # Track used proxies per account
+        self.proxy_display_mapping = {}  # Map actual proxy to display name
+        self.proxy_count = 0  # Counter for proxy display names
         self.max_accounts = 2  # Default to process only 2 accounts
         self.runs_per_proxy = 1  # How many times to run each account with each proxy
 
@@ -50,6 +55,13 @@ class Dawn:
         minutes, seconds = divmod(remainder, 60)
         return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
+    def get_proxy_display_name(self, proxy):
+        """Convert actual proxy URL to a display name like 'Proxy - 1'"""
+        if proxy not in self.proxy_display_mapping:
+            self.proxy_count += 1
+            self.proxy_display_mapping[proxy] = f"Proxy - {self.proxy_count}"
+        return self.proxy_display_mapping[proxy]
+
     async def load_auto_proxies(self):
         url = (
             "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"
@@ -68,6 +80,10 @@ class Dawn:
                             f"{Fore.RED + Style.BRIGHT}No proxies found in the downloaded list!{Style.RESET_ALL}"
                         )
                         return
+
+                    # Reset proxy mappings when loading new proxies
+                    self.proxy_display_mapping = {}
+                    self.proxy_count = 0
 
                     # Shuffle the proxies for better distribution
                     random.shuffle(self.proxies)
@@ -97,6 +113,11 @@ class Dawn:
                 proxies = f.read().splitlines()
 
             self.proxies = proxies
+
+            # Reset proxy mappings when loading new proxies
+            self.proxy_display_mapping = {}
+            self.proxy_count = 0
+
             # Shuffle the proxies for better distribution
             random.shuffle(self.proxies)
             self.log(
@@ -326,6 +347,7 @@ class Dawn:
     ):
         hide_email = self.hide_email(email)
         proxy = None
+        proxy_display = "Without Proxy"
 
         if not use_proxy:
             my_ip = await self.cek_ip()
@@ -405,12 +427,12 @@ class Dawn:
         else:
             proxies = self.get_next_proxy(email)
             proxy = self.check_proxy_schemes(proxies)
+            proxy_display = self.get_proxy_display_name(proxy)
 
             self.log(
                 f"{Fore.MAGENTA + Style.BRIGHT}[ Run {run_count}{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} for {hide_email} {Style.RESET_ALL}"
-                f"{Fore.MAGENTA + Style.BRIGHT}] [ Proxy{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} {proxy} {Style.RESET_ALL}"
+                f"{Fore.MAGENTA + Style.BRIGHT}] [ {proxy_display} {Style.RESET_ALL}"
                 f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
             )
 
@@ -441,7 +463,7 @@ class Dawn:
                         f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} {hide_email} {Style.RESET_ALL}"
                         f"{Fore.RED + Style.BRIGHT}Login Failed{Style.RESET_ALL}"
-                        f"{Fore.WHITE + Style.BRIGHT} With Proxy {proxy} {Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} With {proxy_display} {Style.RESET_ALL}"
                         f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
                     )
                     await asyncio.sleep(1)
@@ -453,6 +475,7 @@ class Dawn:
 
                     proxies = self.get_next_proxy(email)
                     proxy = self.check_proxy_schemes(proxies)
+                    proxy_display = self.get_proxy_display_name(proxy)
 
             if not user:
                 self.log(
@@ -483,7 +506,7 @@ class Dawn:
             await asyncio.sleep(1)
 
             self.log(
-                f"{Fore.BLUE + Style.BRIGHT}Try to Send Ping for {hide_email} with Proxy {proxy},{Style.RESET_ALL}"
+                f"{Fore.BLUE + Style.BRIGHT}Try to Send Ping for {hide_email} with {proxy_display},{Style.RESET_ALL}"
                 f"{Fore.YELLOW + Style.BRIGHT} Wait... {Style.RESET_ALL}"
             )
             await asyncio.sleep(1)
@@ -492,7 +515,7 @@ class Dawn:
             if not keepalive:
                 self.log(
                     f"{Fore.MAGENTA + Style.BRIGHT}[ Ping{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} Sent With Proxy {proxy} {Style.RESET_ALL}"
+                    f"{Fore.WHITE + Style.BRIGHT} Sent With {proxy_display} {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}] [ Status{Style.RESET_ALL}"
                     f"{Fore.YELLOW + Style.BRIGHT} Keep Alive Not Recorded {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
@@ -502,13 +525,15 @@ class Dawn:
             if keepalive:
                 self.log(
                     f"{Fore.MAGENTA + Style.BRIGHT}[ Ping{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} Sent With Proxy {proxy} {Style.RESET_ALL}"
+                    f"{Fore.WHITE + Style.BRIGHT} Sent With {proxy_display} {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}] [ Status{Style.RESET_ALL}"
                     f"{Fore.GREEN + Style.BRIGHT} Keep Alive Recorded {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
                 )
 
+    # The rest of the code remains unchanged...
     async def main(self):
+        # This remains the same as your provided code...
         try:
             accounts = self.load_accounts()
             if not accounts:
@@ -582,10 +607,12 @@ class Dawn:
                             continue
 
                         app_id = self.generate_app_id()
-                        
+
                         # Process the current account with the current proxy run
-                        await self.process_accounts(app_id, token, email, use_proxy, proxy_run)
-                        
+                        await self.process_accounts(
+                            app_id, token, email, use_proxy, proxy_run
+                        )
+
                         # Add delay between accounts in the same cycle
                         if accounts.index(account) < len(accounts) - 1:
                             delay = random.randint(3, 8)
@@ -593,7 +620,7 @@ class Dawn:
                                 f"{Fore.YELLOW + Style.BRIGHT}Waiting {delay} seconds before next account...{Style.RESET_ALL}"
                             )
                             await asyncio.sleep(delay)
-                    
+
                     # Add separator between proxy cycles
                     if proxy_run < self.runs_per_proxy:
                         self.log(f"{Fore.CYAN + Style.BRIGHT}-{Style.RESET_ALL}" * 75)
