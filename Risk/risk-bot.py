@@ -46,7 +46,7 @@ class Dawn:
     def welcome(self):
         print(
             f"""
-        {Fore.GREEN + Style.BRIGHT}Dawn-Bot-Validator Version- 1.0.2 - BOT |  {Fore.YELLOW + Style.BRIGHT}Mad-Jr - Join https://t.me/masterairdrophunts)
+        {Fore.GREEN + Style.BRIGHT}Dawn-Bot-Validator Version- 1.0.5 - BOT |  {Fore.YELLOW + Style.BRIGHT}Mad-Jr - Join https://t.me/masterairdrophunts)
             """
         )
 
