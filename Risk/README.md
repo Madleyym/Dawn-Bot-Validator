@@ -1,6 +1,6 @@
 # Dawn Bot Validator - v1.0.5
 
-![Dawn Bot Banner](Risk/images/img.png)
+![Dawn Bot Banner](images/img.png)
 
 A specialized bot for validating and maintaining multiple Dawn extension accounts through automated proxy rotation and keepalive pings.
 
