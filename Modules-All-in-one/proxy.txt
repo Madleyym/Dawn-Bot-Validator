@@ -1,0 +1,3 @@
+#GANTI DENGAN PROXY ANDA
+http://host:port
+https://user:pass@host:port
