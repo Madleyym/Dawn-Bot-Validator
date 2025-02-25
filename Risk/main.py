@@ -41,7 +41,7 @@ class Dawn:
     def welcome(self):
         print(
             f"""
-        {Fore.GREEN + Style.BRIGHT}Dawn-Bot-Validator Version- 1.0.2 - BOT |  {Fore.YELLOW + Style.BRIGHT}Mosasaurus Verse - Join https://t.me/masterairdrophunts)
+        {Fore.GREEN + Style.BRIGHT}Dawn-Bot-Validator Version- 1.0.2 - BOT |  {Fore.YELLOW + Style.BRIGHT}Mad-Jr - Join https://t.me/masterairdrophunts)
             """
         )
 
@@ -353,11 +353,15 @@ class Dawn:
                 )
                 return
 
-            total_points = sum(
-                value
-                for key, value in user.items()
-                if "points" in key and isinstance(value, (int, float))
-            )
+            total_points = 0
+            for key, value in user.items():
+                if (
+                    isinstance(key, str)
+                    and "points" in key.lower()
+                    and isinstance(value, (int, float))
+                ):
+                    total_points += value
+
             self.log(
                 f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} {hide_email} {Style.RESET_ALL}"
@@ -399,7 +403,6 @@ class Dawn:
                 )
 
         else:
-            # Get a new unique proxy for this run
             proxies = self.get_next_proxy(email)
             proxy = self.check_proxy_schemes(proxies)
 
@@ -460,11 +463,15 @@ class Dawn:
                 )
                 return
 
-            total_points = sum(
-                value
-                for key, value in user.items()
-                if "points" in key and isinstance(value, (int, float))
-            )
+            total_points = 0
+            for key, value in user.items():
+                if (
+                    isinstance(key, str)
+                    and "points" in key.lower()
+                    and isinstance(value, (int, float))
+                ):
+                    total_points += value
+
             self.log(
                 f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} {hide_email} {Style.RESET_ALL}"
